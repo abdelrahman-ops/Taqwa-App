@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable: background fills entire image, content stays in center 80% safe zone -->
+  <defs>
+    <linearGradient id="mbg" x1="0%" y1="0%" x2="120%" y2="120%">
+      <stop offset="0%" stop-color="#2E7D32"/>
+      <stop offset="100%" stop-color="#071A07"/>
+    </linearGradient>
+    <radialGradient id="mglow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#FFD54F" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFD54F" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="msh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Full bleed background (no border radius – OS applies its own mask) -->
+  <rect width="512" height="512" fill="url(#mbg)"/>
+  <rect width="512" height="512" fill="url(#mglow)"/>
+
+  <!-- Safe zone: 80% of 512 = 410px, offset 51px on each side -->
+  <!-- Content is centered within 51..461 horizontally and vertically -->
+
+  <!-- Crescent moon (center of safe zone upper half) -->
+  <g transform="translate(256,175)" filter="url(#msh)">
+    <circle cx="0" cy="0" r="64" fill="#FFD54F"/>
+    <circle cx="27" cy="-17" r="51" fill="#0E2C0E"/>
+    <g transform="translate(62,-53)">
+      <polygon points="0,-16 4.4,-5.3 17.2,-5.3 7.1,2.4 10.6,14.1 0,7.3 -10.6,14.1 -7.1,2.4 -17.2,-5.3 -4.4,-5.3"
+               fill="#FFD54F"/>
+    </g>
+  </g>
+
+  <!-- Divider -->
+  <line x1="160" y1="268" x2="352" y2="268" stroke="#FFD54F" stroke-width="1.5" stroke-opacity="0.35"/>
+
+  <!-- تقوى text -->
+  <text x="256" y="380"
+    fill="#FFD54F"
+    font-family="'Noto Naskh Arabic','Traditional Arabic','Arabic Typesetting','Scheherazade New',serif"
+    font-size="128"
+    font-weight="700"
+    text-anchor="middle"
+    direction="rtl"
+    filter="url(#msh)">&#x062A;&#x0642;&#x0648;&#x0649;</text>
+
+  <!-- Dots ornament -->
+  <g opacity="0.55" fill="#FFD54F">
+    <circle cx="219" cy="412" r="5"/>
+    <circle cx="256" cy="412" r="7"/>
+    <circle cx="293" cy="412" r="5"/>
+  </g>
+  <line x1="130" y1="428" x2="205" y2="428" stroke="#FFD54F" stroke-width="2" stroke-opacity="0.4"/>
+  <line x1="307" y1="428" x2="382" y2="428" stroke="#FFD54F" stroke-width="2" stroke-opacity="0.4"/>
+</svg>

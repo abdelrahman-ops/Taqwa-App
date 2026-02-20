@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E7D32"/>
+      <stop offset="100%" stop-color="#0A2A0A"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="100" height="100" rx="18" fill="url(#bg)"/>
+  <!-- Subtle border -->
+  <rect x="3.5" y="3.5" width="93" height="93" rx="15" fill="none" stroke="#FFD54F" stroke-width="0.8" stroke-opacity="0.35"/>
+  <!-- Crescent moon -->
+  <circle cx="50" cy="33" r="14" fill="#FFD54F"/>
+  <circle cx="56" cy="29" r="11" fill="#153A15"/>
+  <!-- Small star -->
+  <polygon points="66,19 67.4,23.5 72,23.5 68.3,26.2 69.7,30.7 66,28 62.3,30.7 63.7,26.2 60,23.5 64.6,23.5"
+           fill="#FFD54F" transform="scale(0.55) translate(54,-2)"/>
+  <!-- تقوى text -->
+  <text x="50" y="72"
+    fill="#FFD54F"
+    font-family="'Noto Naskh Arabic','Traditional Arabic','Arabic Typesetting',serif"
+    font-size="26"
+    font-weight="700"
+    text-anchor="middle"
+    direction="rtl">تقوى</text>
+  <!-- Ornament dots -->
+  <circle cx="43" cy="82" r="1.2" fill="#FFD54F" opacity="0.6"/>
+  <circle cx="50" cy="82" r="1.5" fill="#FFD54F" opacity="0.6"/>
+  <circle cx="57" cy="82" r="1.2" fill="#FFD54F" opacity="0.6"/>
+</svg>
