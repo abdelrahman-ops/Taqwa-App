@@ -197,12 +197,16 @@ export function formatCountdown(ms: number, locale: 'ar' | 'en'): string {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
 
+  const pad = (n: number) => String(n).padStart(2, '0');
+
   if (locale === 'ar') {
-    if (h > 0) return `${h} ساعة ${m} دقيقة`;
-    if (m > 0) return `${m} دقيقة ${s} ثانية`;
+    // Arabic: always show h ساعة m دقيقة s ثانية (with Arabic numerals)
+    if (h > 0) return `${h} ساعة ${pad(m)} دقيقة ${pad(s)} ثانية`;
+    if (m > 0) return `${m} دقيقة ${pad(s)} ثانية`;
     return `${s} ثانية`;
   }
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
+  // English: compact timer
+  if (h > 0) return `${h}h ${pad(m)}m ${pad(s)}s`;
+  if (m > 0) return `${m}m ${pad(s)}s`;
   return `${s}s`;
 }

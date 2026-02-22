@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FiSun,
   FiSunrise,
@@ -85,6 +85,29 @@ export default function PrayerCard() {
     requestPermission,
   } = usePrayerTimes();
 
+  // ── Real-time countdown (ticks every second) ──────────────────────
+  const [liveRemainingMs, setLiveRemainingMs] = useState<number>(0);
+  const targetTimeRef = useRef<number>(0);
+
+  // Sync target time whenever the prayer data refreshes
+  useEffect(() => {
+    if (prayerTimes?.nextPrayer) {
+      targetTimeRef.current = Date.now() + prayerTimes.nextPrayer.remainingMs;
+      setLiveRemainingMs(prayerTimes.nextPrayer.remainingMs);
+    }
+  }, [prayerTimes?.nextPrayer?.remainingMs, prayerTimes?.nextPrayer?.name]);
+
+  // Tick every second
+  useEffect(() => {
+    if (!prayerTimes?.nextPrayer) return;
+    const tick = () => {
+      setLiveRemainingMs(Math.max(0, targetTimeRef.current - Date.now()));
+    };
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [prayerTimes?.nextPrayer?.name]);
+  // ──────────────────────────────────────────────────────────────────
+
   if (!dailyLog) return null;
   const { prayers } = dailyLog;
 
@@ -124,14 +147,14 @@ export default function PrayerCard() {
         </span>
       </div>
 
-      {/* Next prayer countdown */}
+      {/* Next prayer countdown — live timer */}
       {prayerTimes?.nextPrayer && (
         <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl px-3 py-2 mb-3">
           <FiClock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
-          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+          <span className="text-xs font-medium text-blue-700 dark:text-blue-300 tabular-nums">
             {locale === "ar"
-              ? `${prayerTimes.nextPrayer.nameAr} بعد ${formatCountdown(prayerTimes.nextPrayer.remainingMs, "ar")}`
-              : `${prayerTimes.nextPrayer.name} in ${formatCountdown(prayerTimes.nextPrayer.remainingMs, "en")}`}
+              ? `${prayerTimes.nextPrayer.nameAr} بعد ${formatCountdown(liveRemainingMs, "ar")}`
+              : `${prayerTimes.nextPrayer.name} in ${formatCountdown(liveRemainingMs, "en")}`}
           </span>
         </div>
       )}
