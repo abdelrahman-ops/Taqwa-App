@@ -5,20 +5,29 @@ import { useApp } from '../context/AppContext';
 import { isRamadanPeriod } from '../types';
 
 export default function FastingCard() {
-  const { dailyLog, updateFasting, t, currentDayNumber } = useApp();
+  const { dailyLog, updateFasting, t, locale, currentDayNumber } = useApp();
   const [showNotes, setShowNotes] = useState(false);
 
-  // Fasting only applies during Ramadan (days 1-30)
-  if (!dailyLog || !isRamadanPeriod(currentDayNumber)) return null;
+  if (!dailyLog) return null;
   const { fasting } = dailyLog;
+  const inRamadan = isRamadanPeriod(currentDayNumber);
+
+  const fastingTitle = inRamadan
+    ? t.fasting
+    : locale === 'ar' ? 'صيام تطوعي' : 'Voluntary Fasting';
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-          <IoRestaurantOutline className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${inRamadan ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-teal-100 dark:bg-teal-900/30'}`}>
+          <IoRestaurantOutline className={`w-4 h-4 ${inRamadan ? 'text-amber-600 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`} />
         </div>
-        <h2 className="font-semibold text-gray-800 dark:text-gray-100">{t.fasting}</h2>
+        <h2 className="font-semibold text-gray-800 dark:text-gray-100">{fastingTitle}</h2>
+        {!inRamadan && (
+          <span className="text-[10px] bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full font-medium">
+            {locale === 'ar' ? 'سنة' : 'Sunnah'}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

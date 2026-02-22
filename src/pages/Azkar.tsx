@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { FiSun, FiMoon, FiRefreshCw, FiCheckCircle } from 'react-icons/fi';
-import { MORNING_AZKAR, EVENING_AZKAR } from '../types';
+import React, { useState, useMemo } from 'react';
+import { FiSun, FiMoon, FiRefreshCw, FiCheckCircle, FiBookOpen, FiVolume2, FiChevronLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { getAzkarList, AzkarItem } from '../data/azkar';
 import { useApp } from '../context/AppContext';
 
 type Tab = 'morning' | 'evening';
@@ -10,38 +11,41 @@ interface DhikrState {
   done: boolean;
 }
 
-function initCounters(azkar: typeof MORNING_AZKAR): Record<number, DhikrState> {
-  return Object.fromEntries(azkar.map(a => [a.id, { current: 0, done: false }]));
+function initCounters(azkar: AzkarItem[]): Record<number, DhikrState> {
+  return Object.fromEntries(azkar.map(a => [a.order, { current: 0, done: false }]));
 }
 
 export default function Azkar() {
   const { locale, updateAzkar, dailyLog } = useApp();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('morning');
-  const [morningCounts, setMorningCounts] = useState<Record<number, DhikrState>>(() => initCounters(MORNING_AZKAR));
-  const [eveningCounts, setEveningCounts] = useState<Record<number, DhikrState>>(() => initCounters(EVENING_AZKAR));
+  const [showDetail, setShowDetail] = useState<number | null>(null);
 
-  const activeAzkar = tab === 'morning' ? MORNING_AZKAR : EVENING_AZKAR;
+  const morningAzkar = useMemo(() => getAzkarList(locale as 'ar' | 'en', 'morning'), [locale]);
+  const eveningAzkar = useMemo(() => getAzkarList(locale as 'ar' | 'en', 'evening'), [locale]);
+
+  const [morningCounts, setMorningCounts] = useState<Record<number, DhikrState>>(() => initCounters(morningAzkar));
+  const [eveningCounts, setEveningCounts] = useState<Record<number, DhikrState>>(() => initCounters(eveningAzkar));
+
+  const activeAzkar = tab === 'morning' ? morningAzkar : eveningAzkar;
   const activeCounts = tab === 'morning' ? morningCounts : eveningCounts;
   const setActiveCounts = tab === 'morning' ? setMorningCounts : setEveningCounts;
 
   const doneCount = Object.values(activeCounts).filter(s => s.done).length;
   const totalCount = activeAzkar.length;
-  const allDone = doneCount === totalCount;
+  const allDone = doneCount === totalCount && totalCount > 0;
 
-  function tap(id: number, target: number) {
+  function tap(order: number, target: number) {
     setActiveCounts(prev => {
-      const cur = prev[id]?.current ?? 0;
+      const cur = prev[order]?.current ?? 0;
       const next = cur + 1;
       const done = next >= target;
-      if (done && !prev[id]?.done) {
-        // Mark whole session done if all are done
-      }
-      return { ...prev, [id]: { current: Math.min(next, target), done } };
+      return { ...prev, [order]: { current: Math.min(next, target), done } };
     });
   }
 
-  function resetOne(id: number) {
-    setActiveCounts(prev => ({ ...prev, [id]: { current: 0, done: false } }));
+  function resetOne(order: number) {
+    setActiveCounts(prev => ({ ...prev, [order]: { current: 0, done: false } }));
   }
 
   function resetAll() {
@@ -60,11 +64,20 @@ export default function Azkar() {
 
   return (
     <div>
-      {/* Header */}
+      {/* Header with iOS-style back button */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-black text-gray-800 dark:text-gray-100">
-          {locale === 'ar' ? 'الأذكار اليومية' : 'Daily Azkar'}
-        </h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all"
+            aria-label={locale === 'ar' ? 'رجوع' : 'Back'}
+          >
+            <FiChevronLeft className={`w-5 h-5 ${locale === 'ar' ? 'rotate-180' : ''}`} />
+          </button>
+          <h1 className="text-xl font-black text-gray-800 dark:text-gray-100">
+            {locale === 'ar' ? 'الأذكار اليومية' : 'Daily Azkar'}
+          </h1>
+        </div>
         <button
           onClick={resetAll}
           className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
@@ -117,23 +130,75 @@ export default function Azkar() {
       {/* Dhikr cards */}
       <div className="space-y-3">
         {activeAzkar.map(dhikr => {
-          const state = activeCounts[dhikr.id] ?? { current: 0, done: false };
+          const state = activeCounts[dhikr.order] ?? { current: 0, done: false };
           const progressPct = Math.min((state.current / dhikr.count) * 100, 100);
+          const isExpanded = showDetail === dhikr.order;
 
           return (
             <div
-              key={dhikr.id}
+              key={dhikr.order}
               className={`bg-white dark:bg-gray-900 rounded-2xl border-2 shadow-sm transition-all ${state.done ? 'border-emerald-200 dark:border-emerald-800 opacity-80' : 'border-gray-100 dark:border-gray-800'}`}
             >
               {/* Arabic text */}
               <div className="p-4 pb-2">
                 <p className="arabic-text text-right text-lg leading-loose text-gray-800 dark:text-gray-100">
-                  {dhikr.text}
+                  {dhikr.content}
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 leading-relaxed">
-                  {dhikr.translation}
-                </p>
+                {dhikr.translation && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 leading-relaxed">
+                    {dhikr.translation}
+                  </p>
+                )}
+                {dhikr.countDescription && (
+                  <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-1 italic">
+                    {dhikr.countDescription}
+                  </p>
+                )}
               </div>
+
+              {/* Fadl (virtue) and source — expandable */}
+              {(dhikr.fadl || dhikr.source) && (
+                <div className="px-4 pb-2">
+                  <button
+                    onClick={() => setShowDetail(isExpanded ? null : dhikr.order)}
+                    className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
+                  >
+                    <FiBookOpen className="w-3 h-3" />
+                    {locale === 'ar' ? (isExpanded ? 'إخفاء الفضل' : 'فضل الذكر') : (isExpanded ? 'Hide details' : 'Show virtue & source')}
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-2 p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl space-y-2">
+                      {dhikr.fadl && (
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed" style={{ direction: locale === 'ar' ? 'rtl' : 'ltr' }}>
+                          <span className="font-semibold">{locale === 'ar' ? 'الفضل: ' : 'Virtue: '}</span>
+                          {dhikr.fadl}
+                        </p>
+                      )}
+                      {dhikr.source && (
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed" style={{ direction: locale === 'ar' ? 'rtl' : 'ltr' }}>
+                          <span className="font-semibold">{locale === 'ar' ? 'المصدر: ' : 'Source: '}</span>
+                          {dhikr.source}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Audio link */}
+              {dhikr.audio && (
+                <div className="px-4 pb-2">
+                  <a
+                    href={dhikr.audio}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10px] text-blue-500 dark:text-blue-400 hover:underline"
+                  >
+                    <FiVolume2 className="w-3 h-3" />
+                    {locale === 'ar' ? 'استمع' : 'Listen'}
+                  </a>
+                </div>
+              )}
 
               {/* Counter progress */}
               {dhikr.count > 1 && (
@@ -150,7 +215,7 @@ export default function Azkar() {
               {/* Tap button + counter */}
               <div className="flex items-center gap-3 px-4 pb-4 pt-1">
                 <button
-                  onClick={() => tap(dhikr.id, dhikr.count)}
+                  onClick={() => tap(dhikr.order, dhikr.count)}
                   disabled={state.done}
                   className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 ${
                     state.done
@@ -174,7 +239,7 @@ export default function Azkar() {
                   )}
                 </button>
                 <button
-                  onClick={() => resetOne(dhikr.id)}
+                  onClick={() => resetOne(dhikr.order)}
                   className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                   aria-label="Reset this dhikr"
                 >

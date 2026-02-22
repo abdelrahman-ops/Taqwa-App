@@ -148,7 +148,7 @@ export default function Quran() {
                 <span className="text-gray-500 dark:text-gray-400">
                   {locale === 'ar' ? `${toLocalizedNum(day.fromPage, locale)} - ${toLocalizedNum(day.toPage, locale)}` : `pp. ${toLocalizedNum(day.fromPage, locale)}–${toLocalizedNum(day.toPage, locale)}`}
                 </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{toLocalizedNum(day.dailyPages, locale)}p</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{toLocalizedNum(day.dailyPages, locale)} {locale === 'ar' ? 'ص' : 'p'}</span>
               </div>
             ))}
           </div>

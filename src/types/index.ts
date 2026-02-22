@@ -84,6 +84,51 @@ export const RAMADAN_DAYS = 30;
 /** Maximum tracking days — allows the app to work past Ramadan */
 export const MAX_TRACKING_DAYS = 365;
 
+// ===== Hijri Calendar Months After Ramadan 1447 AH =====
+// Each entry: [monthNameEn, monthNameAr, numberOfDays]
+// Ramadan itself is days 1-30 and not included here.
+const HIJRI_MONTHS_AFTER_RAMADAN: [string, string, number][] = [
+  ['Shawwal',     'شوال',       29],
+  ["Dhul Qi'dah", 'ذو القعدة',  30],
+  ['Dhul Hijjah', 'ذو الحجة',   30],
+  ['Muharram',    'محرم',       30],
+  ['Safar',       'صفر',        29],
+  ["Rabi' al-Awwal", 'ربيع الأول', 30],
+  ["Rabi' al-Thani", 'ربيع الآخر', 29],
+  ['Jumada al-Ula',  'جمادى الأولى', 30],
+  ['Jumada al-Thani','جمادى الآخرة', 29],
+  ["Sha'ban",     'شعبان',      30],
+  ['Ramadan',     'رمضان',      30],
+];
+
+export interface HijriDate {
+  monthNameEn: string;
+  monthNameAr: string;
+  dayInMonth: number;
+  daysInMonth: number;
+}
+
+/**
+ * Convert a dayNumber (1-based from Ramadan start) to a Hijri month + day.
+ * Days 1-30 → Ramadan. Days 31+ → subsequent months.
+ */
+export function getHijriDate(dayNumber: number): HijriDate {
+  if (dayNumber <= RAMADAN_DAYS) {
+    return { monthNameEn: 'Ramadan', monthNameAr: 'رمضان', dayInMonth: dayNumber, daysInMonth: RAMADAN_DAYS };
+  }
+
+  let remaining = dayNumber - RAMADAN_DAYS;
+  for (const [en, ar, days] of HIJRI_MONTHS_AFTER_RAMADAN) {
+    if (remaining <= days) {
+      return { monthNameEn: en, monthNameAr: ar, dayInMonth: remaining, daysInMonth: days };
+    }
+    remaining -= days;
+  }
+
+  // Fallback (beyond a full year)
+  return { monthNameEn: 'Day', monthNameAr: 'يوم', dayInMonth: dayNumber, daysInMonth: 30 };
+}
+
 export const PRAYER_NAMES: Record<keyof PrayerStatus, string> = {
   fajr: 'Fajr',
   dhuhr: 'Dhuhr',
@@ -246,20 +291,16 @@ export function createEmptyDailyLog(date: string, dayNumber: number, quranGoal?:
 }
 
 export function calculateDayProgress(log: DailyLog): number {
-  const inRamadan = isRamadanPeriod(log.dayNumber);
   let total = 0;
   let completed = 0;
 
-  // Fasting — Ramadan only
-  if (inRamadan) {
-    total += 1;
-    if (log.fasting.completed) completed += 1;
-  }
+  // Fasting — always counts (Ramadan = obligation, post-Ramadan = voluntary)
+  total += 1;
+  if (log.fasting.completed) completed += 1;
 
-  // Prayers — taraweeh only during Ramadan
+  // Prayers — taraweeh/qiyam always counts
   const prayers = log.prayers;
-  const prayerList: (keyof PrayerStatus)[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-  if (inRamadan) prayerList.push('taraweeh');
+  const prayerList: (keyof PrayerStatus)[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'taraweeh'];
   total += prayerList.length;
   prayerList.forEach(k => { if (prayers[k]) completed += 1; });
 

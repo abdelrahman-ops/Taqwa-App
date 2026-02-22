@@ -11,7 +11,7 @@ import {
   calculateDayProgress,
 } from '../types';
 import * as storage from '../services/storage';
-import * as api from '../services/api';
+import * as api from '../lib/apiClient';
 import { Locale, getDirection, getTranslations, Translations } from '../i18n';
 
 // ===== Theme =====
@@ -268,15 +268,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const guestMode = storage.isGuestMode();
 
       if (authenticated) {
-        const { data } = await api.getMe();
-        if (data) {
-          profile = {
-            name: data.name,
-            email: data.email,
-            ramadanStartDate: profile?.ramadanStartDate || startDate,
-          };
-          storage.saveUserProfile(profile);
-        } else {
+        try {
+          const { data } = await api.get<{ _id: string; name: string; email: string }>('/auth/me');
+          if (data) {
+            profile = {
+              name: data.name,
+              email: data.email,
+              ramadanStartDate: profile?.ramadanStartDate || startDate,
+            };
+            storage.saveUserProfile(profile);
+          }
+        } catch {
           api.setAuthToken(null);
           authenticated = false;
         }
@@ -315,7 +317,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_DAILY_LOG', payload: updated });
       dispatch({ type: 'SET_ALL_LOGS', payload: storage.getAllDailyLogs() });
       if (api.isAuthenticated()) {
-        api.saveDailyLogToServer(updated.date, updated).catch(() => {});
+        api.put(`/daily-log/${updated.date}`, updated).catch(() => {});
       }
     },
     []
@@ -425,7 +427,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_DAILY_LOG', payload: refreshedLog });
     dispatch({ type: 'SET_ALL_LOGS', payload: storage.getAllDailyLogs() });
     if (api.isAuthenticated()) {
-      api.saveQuranGoalToServer(targetCompletions).catch(() => {});
+      api.put('/quran-goal', { targetCompletions }).catch(() => {});
     }
   }, [state.currentDate, state.currentDayNumber]);
 
@@ -463,8 +465,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginUser = useCallback(async (email: string, password: string): Promise<string | null> => {
-    const { data, error } = await api.login(email, password);
-    if (data) {
+    try {
+      const { data } = await api.post<{ token: string; user: { id: string; name: string; email: string } }>('/auth/login', { email, password });
       api.setAuthToken(data.token);
       const profile: UserProfile = {
         name: data.user.name,
@@ -477,13 +479,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_AUTHENTICATED', payload: true });
       dispatch({ type: 'SET_GUEST_MODE', payload: false });
       return null;
+    } catch (err: any) {
+      return err?.message || 'Login failed';
     }
-    return error || 'Login failed';
   }, [state.ramadanStartDate, state.userProfile?.ramadanStartDate]);
 
   const registerUser = useCallback(async (name: string, email: string, password: string): Promise<string | null> => {
-    const { data, error } = await api.register(name, email, password);
-    if (data) {
+    try {
+      const { data } = await api.post<{ token: string; user: { id: string; name: string; email: string } }>('/auth/register', { name, email, password });
       api.setAuthToken(data.token);
       const profile: UserProfile = {
         name: data.user.name,
@@ -496,8 +499,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_AUTHENTICATED', payload: true });
       dispatch({ type: 'SET_GUEST_MODE', payload: false });
       return null;
+    } catch (err: any) {
+      return err?.message || 'Registration failed';
     }
-    return error || 'Registration failed';
   }, [state.ramadanStartDate, state.userProfile?.ramadanStartDate]);
 
   const continueAsGuest = useCallback(() => {
@@ -521,7 +525,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!api.isAuthenticated()) return;
     dispatch({ type: 'SET_SYNCING', payload: true });
     try {
-      await api.syncToServer(storage.getAllDailyLogs(), storage.getQuranGoal());
+      const allLogs = storage.getAllDailyLogs();
+      const quranGoal = storage.getQuranGoal();
+      // Sync daily logs
+      for (const [date, log] of Object.entries(allLogs)) {
+        await api.put(`/daily-log/${date}`, log).catch(() => {});
+      }
+      // Sync quran goal
+      if (quranGoal) {
+        await api.put('/quran-goal', { targetCompletions: quranGoal.targetCompletions }).catch(() => {});
+      }
     } finally {
       dispatch({ type: 'SET_SYNCING', payload: false });
     }

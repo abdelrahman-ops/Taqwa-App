@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
 import { useApp } from '../context/AppContext';
-import { formatDate, getRamadanDay, MAX_TRACKING_DAYS, toLocalizedNum, RAMADAN_DAYS } from '../types';
+import { formatDate, getRamadanDay, MAX_TRACKING_DAYS, toLocalizedNum, RAMADAN_DAYS, getHijriDate } from '../types';
 
 export default function DaySelector() {
   const { currentDate, setDate, currentDayNumber, t, locale } = useApp();
@@ -27,12 +27,14 @@ export default function DaySelector() {
     { weekday: 'short', month: 'short', day: 'numeric' }
   );
 
+  const hijriDate = getHijriDate(currentDayNumber);
+
   return (
-    <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-3 py-2 mb-4 shadow-sm">
+    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-2 py-2 mb-4 shadow-sm">
       <button
         onClick={() => changeDay(-1)}
         disabled={!canGoBack}
-        className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors"
+        className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-20 transition-all active:scale-90"
         aria-label="Previous day"
       >
         {locale === 'ar' ? <FiChevronRight className="w-5 h-5" /> : <FiChevronLeft className="w-5 h-5" />}
@@ -40,33 +42,29 @@ export default function DaySelector() {
 
       <button
         onClick={() => setDate(today)}
-        className="flex flex-col items-center gap-0 flex-1"
+        className="flex flex-col items-center gap-0.5 flex-1 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 active:scale-[0.98] transition-transform"
       >
         <div className="flex items-center gap-1.5">
           <FiCalendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-            {currentDayNumber <= RAMADAN_DAYS
-              ? locale === 'ar'
-                ? `رمضان ${toLocalizedNum(currentDayNumber, locale)}`
-                : `Ramadan ${toLocalizedNum(currentDayNumber, locale)}`
-              : locale === 'ar'
-                ? `شوال ${toLocalizedNum(currentDayNumber - RAMADAN_DAYS, locale)}`
-                : `Shawwal ${toLocalizedNum(currentDayNumber - RAMADAN_DAYS, locale)}`
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            {locale === 'ar'
+              ? `${hijriDate.monthNameAr} ${toLocalizedNum(hijriDate.dayInMonth, locale)}`
+              : `${hijriDate.monthNameEn} ${toLocalizedNum(hijriDate.dayInMonth, locale)}`
             }
             {isToday && (
-              <span className="ml-1 text-[10px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">
+              <span className="mr-1 ml-1 text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full font-bold">
                 {t.today}
               </span>
             )}
           </span>
         </div>
-        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{dateLabel}</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{dateLabel}</span>
       </button>
 
       <button
         onClick={() => changeDay(1)}
         disabled={!canGoForward}
-        className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors"
+        className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-20 transition-all active:scale-90"
         aria-label="Next day"
       >
         {locale === 'ar' ? <FiChevronLeft className="w-5 h-5" /> : <FiChevronRight className="w-5 h-5" />}
