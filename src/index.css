@@ -23,6 +23,22 @@
     --color-gold-light: #F59E0B;
   }
 
+  /* ── Last 10 Days of Ramadan: deep indigo/purple ── */
+  [data-ramadan-phase="last-ten"] {
+    --color-primary: #4338CA;
+    --color-primary-light: #6366F1;
+    --color-gold: #D97706;
+    --color-gold-light: #F59E0B;
+  }
+
+  /* ── Laylat al-Qadr (odd nights 21,23,25,27,29): golden/celestial ── */
+  [data-ramadan-phase="laylat-qadr"] {
+    --color-primary: #7C3AED;
+    --color-primary-light: #8B5CF6;
+    --color-gold: #D4AF37;
+    --color-gold-light: #FFD700;
+  }
+
   html {
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
@@ -41,6 +57,22 @@
     background: #0A0F0A;
   }
 
+  /* Last 10 days backgrounds */
+  [data-ramadan-phase="last-ten"] body {
+    background: #F0F0FF;
+  }
+  [data-ramadan-phase="last-ten"][data-theme="dark"] body {
+    background: #0A0A1A;
+  }
+
+  /* Laylat al-Qadr backgrounds */
+  [data-ramadan-phase="laylat-qadr"] body {
+    background: #FFFDF5;
+  }
+  [data-ramadan-phase="laylat-qadr"][data-theme="dark"] body {
+    background: #0D0A14;
+  }
+
   /* Arabic / RTL */
   [dir="rtl"],
   [lang="ar"] {
@@ -55,6 +87,12 @@
   :focus-visible {
     outline: 2px solid #059669;
     outline-offset: 2px;
+  }
+  [data-ramadan-phase="last-ten"] :focus-visible {
+    outline-color: #6366F1;
+  }
+  [data-ramadan-phase="laylat-qadr"] :focus-visible {
+    outline-color: #8B5CF6;
   }
 
   /* Touch targets on mobile */
@@ -133,6 +171,95 @@
   [data-theme="dark"] .card {
     background: #111B11;
     border-color: #1F2D1F;
+  }
+
+  /* ── Last 10 Days card styling ── */
+  [data-ramadan-phase="last-ten"] .card {
+    background: #F5F3FF;
+    border-color: #C4B5FD;
+    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08);
+  }
+  [data-ramadan-phase="last-ten"][data-theme="dark"] .card {
+    background: #110F24;
+    border-color: #312E81;
+  }
+
+  /* ── Laylat al-Qadr card styling ── */
+  [data-ramadan-phase="laylat-qadr"] .card {
+    background: linear-gradient(135deg, #FFFDF5 0%, #FFF8E1 100%);
+    border-color: #D4AF37;
+    box-shadow: 0 1px 6px rgba(212, 175, 55, 0.12);
+  }
+  [data-ramadan-phase="laylat-qadr"][data-theme="dark"] .card {
+    background: linear-gradient(135deg, #1A1528 0%, #1D1A2E 100%);
+    border-color: #6D28D9;
+    box-shadow: 0 1px 6px rgba(124, 58, 237, 0.15);
+  }
+
+  /* ── Last 10 Days progress ring ── */
+  [data-ramadan-phase="last-ten"] .progress-ring-text,
+  [data-ramadan-phase="laylat-qadr"] .progress-ring-text {
+    color: var(--color-primary);
+  }
+  [data-ramadan-phase="last-ten"][data-theme="dark"] .progress-ring-text {
+    color: #A78BFA;
+  }
+  [data-ramadan-phase="laylat-qadr"][data-theme="dark"] .progress-ring-text {
+    color: #C4B5FD;
+  }
+
+  /* ── Laylat al-Qadr banner ── */
+  .laylat-qadr-banner {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 30%, #4C1D95 70%, #1E1B4B 100%);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+  }
+
+  .laylat-qadr-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 10% 20%, #FFD700 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, #FFF8DC 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 15%, #FFD700 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 40%, #FFF8DC 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 85% 70%, #FFD700 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 80%, #FFF8DC 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 85%, #FFD700 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 10%, #FFF8DC 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 45%, #FFD700 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 90%, #FFF8DC 0%, transparent 100%);
+    animation: twinkle 3s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  /* Last 10 days banner (even nights) */
+  .last-ten-banner {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #3730A3 100%);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 16px rgba(67, 56, 202, 0.25);
+  }
+
+  .last-ten-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 85%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
   }
 }
 
@@ -242,6 +369,21 @@
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Laylat al-Qadr / Last 10 keyframes ── */
+@keyframes twinkle {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+@keyframes golden-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 175, 55, 0.3), 0 0 16px rgba(212, 175, 55, 0.1); }
+  50%      { box-shadow: 0 0 16px rgba(212, 175, 55, 0.5), 0 0 32px rgba(212, 175, 55, 0.2); }
+}
+@keyframes crescent-float {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50%      { transform: translateY(-6px) rotate(-5deg); }
 }
 
 /* ── Reduced motion (intentionally unlayered + !important to override all) ── */

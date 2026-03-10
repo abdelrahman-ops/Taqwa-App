@@ -224,6 +224,41 @@ export function isRamadanPeriod(dayNumber: number): boolean {
   return dayNumber >= 1 && dayNumber <= RAMADAN_DAYS;
 }
 
+// ===== Last 10 Days & Laylat al-Qadr =====
+
+export type RamadanPhase = 'normal' | 'last-ten' | 'laylat-qadr';
+
+/**
+ * The days on which the odd Laylat al-Qadr nights BEGIN (at maghrib).
+ * ليلة 21 starts at maghrib on day 20, ليلة 23 on day 22, etc.
+ */
+export const LAYLAT_AL_QADR_EVES = [20, 22, 24, 26, 28] as const;
+
+/** Returns true if the day falls in the last 10 days of Ramadan (20-30). */
+export function isLast10Days(dayNumber: number): boolean {
+  return dayNumber >= 20 && dayNumber <= RAMADAN_DAYS;
+}
+
+/**
+ * Returns true if tonight is one of the odd Laylat al-Qadr candidate nights.
+ * Day 20 → ليلة 21, Day 22 → ليلة 23, Day 24 → ليلة 25, Day 26 → ليلة 27, Day 28 → ليلة 29.
+ */
+export function isLaylatAlQadrCandidate(dayNumber: number): boolean {
+  return (LAYLAT_AL_QADR_EVES as readonly number[]).includes(dayNumber);
+}
+
+/** Get the night number for display (dayNumber + 1). Only valid when isLaylatAlQadrCandidate is true. */
+export function getLaylatAlQadrNight(dayNumber: number): number {
+  return dayNumber + 1;
+}
+
+/** Determine the current Ramadan phase based on day number. */
+export function getRamadanPhase(dayNumber: number): RamadanPhase {
+  if (isLaylatAlQadrCandidate(dayNumber)) return 'laylat-qadr';
+  if (isLast10Days(dayNumber)) return 'last-ten';
+  return 'normal';
+}
+
 /**
  * Convert a number to localised digit string.
  * Arabic locale → Arabic-Indic numerals (٠-٩); others → ASCII digits.

@@ -9,6 +9,7 @@ import {
   QURAN_TOTAL_PAGES,
   RAMADAN_DAYS,
   calculateDayProgress,
+  getRamadanPhase,
 } from '../types';
 import * as storage from '../services/storage';
 import * as api from '../lib/apiClient';
@@ -222,9 +223,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     root.classList.remove('dark', 'light');
     root.classList.add(state.resolvedTheme);
 
-    const themeColor = state.resolvedTheme === 'dark' ? '#0D1117' : '#1B5E20';
+    const phase = getRamadanPhase(state.currentDayNumber);
+    const themeColor =
+      phase === 'laylat-qadr'
+        ? (state.resolvedTheme === 'dark' ? '#0D0A14' : '#4C1D95')
+        : phase === 'last-ten'
+          ? (state.resolvedTheme === 'dark' ? '#0A0A1A' : '#3730A3')
+          : (state.resolvedTheme === 'dark' ? '#0D1117' : '#1B5E20');
+
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
-  }, [state.resolvedTheme]);
+  }, [state.resolvedTheme, state.currentDayNumber]);
+
+  // Apply Ramadan phase attribute (last 10 days / Laylat al-Qadr)
+  useEffect(() => {
+    const phase = getRamadanPhase(state.currentDayNumber);
+    document.documentElement.setAttribute('data-ramadan-phase', phase);
+  }, [state.currentDayNumber]);
 
   // Apply locale/direction to document
   useEffect(() => {

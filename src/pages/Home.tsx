@@ -9,10 +9,12 @@ import {
   FiCheck,
   FiBookOpen,
   FiSun,
+  FiMoon,
 } from "react-icons/fi";
 import { IoRestaurantOutline } from "react-icons/io5";
 import { useApp } from "../context/AppContext";
 import { calculateDayProgress, toLocalizedNum, RAMADAN_DAYS, getHijriDate } from '../types';
+import { useRamadanPhase } from "../hooks/useRamadanPhase";
 import { getDailyQuote } from "../data/dailyQuotes";
 import { getVoluntaryFast, setVoluntaryFast } from "../services/storage";
 import ProgressRing from "../components/ProgressRing";
@@ -62,6 +64,8 @@ export default function Home() {
     isPostRamadan,
     todayStr,
   } = useApp();
+
+  const { phase, isLastTenDays, isOddNight, nightLabel, nightLabelAr } = useRamadanPhase();
 
   const [voluntaryFast, setVoluntaryFastState] = useState(() => getVoluntaryFast(todayStr));
 
@@ -127,9 +131,70 @@ export default function Home() {
       )}
 
       {/* Bismillah */}
-      <p className="bismillah text-emerald-800/80 dark:text-emerald-300/80 text-center mb-4 mt-1">
-        بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+      <p className={`bismillah text-center mb-4 mt-1 ${
+        phase === 'laylat-qadr'
+          ? 'text-amber-700/90 dark:text-amber-300/90'
+          : phase === 'last-ten'
+            ? 'text-indigo-800/80 dark:text-indigo-300/80'
+            : 'text-emerald-800/80 dark:text-emerald-300/80'
+      }`}>
+        بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
       </p>
+
+      {/* Laylat al-Qadr Banner — Odd Nights (21, 23, 25, 27, 29) */}
+      {isOddNight && !isPostRamadan && (
+        <div className="laylat-qadr-banner mb-4">
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <FiMoon className="w-5 h-5 text-amber-300" style={{ animation: 'crescent-float 3s ease-in-out infinite' }} />
+              <h2 className="text-base font-bold text-white">
+                {locale === 'ar' ? `${nightLabelAr} — ليلة القدر` : `${nightLabel} — Laylat al-Qadr`}
+              </h2>
+              <span className="text-amber-300 text-lg">☪</span>
+            </div>
+            <p className="text-indigo-200 text-sm leading-relaxed mb-2 font-medium" style={{ direction: 'rtl' }}>
+              لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ
+            </p>
+            <p className="text-indigo-300/80 text-xs leading-relaxed">
+              {locale === 'ar'
+                ? 'أكثر من الدعاء والذكر والقيام في هذه الليلة المباركة'
+                : 'The Night of Decree is better than a thousand months. Increase your worship tonight!'}
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-200 border border-amber-400/30">
+                <FiStar className="w-3 h-3" />
+                {locale === 'ar' ? 'قيام الليل' : 'Night Prayer'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-400/20 text-purple-200 border border-purple-400/30">
+                <FiHeart className="w-3 h-3" />
+                {locale === 'ar' ? 'دعاء وذكر' : "Du'a & Dhikr"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Last 10 Days Banner — Even Nights (22, 24, 26, 28, 30) */}
+      {isLastTenDays && !isOddNight && !isPostRamadan && (
+        <div className="last-ten-banner mb-4">
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <FiMoon className="w-5 h-5 text-indigo-300" />
+              <h2 className="text-base font-bold text-white">
+                {locale === 'ar' ? 'العشر الأواخر من رمضان' : 'The Last 10 Days of Ramadan'}
+              </h2>
+            </div>
+            <p className="text-indigo-200/90 text-xs leading-relaxed">
+              {locale === 'ar'
+                ? 'اجتهد في العبادة — ليلة القدر في العشر الأواخر. كان النبي ﷺ يجتهد في العشر الأواخر ما لا يجتهد في غيرها'
+                : 'Strive harder in worship — The Prophet ﷺ used to exert himself in devotion during the last ten nights more than any other time.'}
+            </p>
+            <p className="text-indigo-300/60 text-[10px] mt-2 font-medium">
+              {locale === 'ar' ? 'صحيح مسلم' : 'Sahih Muslim'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Post-Ramadan banner */}
       {isPostRamadan && (
@@ -171,7 +236,13 @@ export default function Home() {
       {/* Header: greeting + day badge + streak flame */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-emerald-700 dark:text-emerald-400 leading-tight truncate">
+          <h1 className={`text-xl font-bold leading-tight truncate ${
+            phase === 'laylat-qadr'
+              ? 'text-purple-700 dark:text-amber-400'
+              : phase === 'last-ten'
+                ? 'text-indigo-700 dark:text-indigo-400'
+                : 'text-emerald-700 dark:text-emerald-400'
+          }`}>
             {greeting}
           </h1>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -394,9 +465,25 @@ export default function Home() {
 </div>
 
           {/* Day badge */}
-          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-            <FiCalendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+            phase === 'laylat-qadr'
+              ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40'
+              : phase === 'last-ten'
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/40'
+                : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/40'
+          }`}>
+            {phase === 'laylat-qadr'
+              ? <FiMoon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              : phase === 'last-ten'
+                ? <FiMoon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                : <FiCalendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+            <span className={`text-xs font-bold ${
+              phase === 'laylat-qadr'
+                ? 'text-amber-700 dark:text-amber-400'
+                : phase === 'last-ten'
+                  ? 'text-indigo-700 dark:text-indigo-400'
+                  : 'text-emerald-700 dark:text-emerald-400'
+            }`}>
               {(() => {
                 const hijri = getHijriDate(currentDayNumber);
                 return locale === 'ar'
@@ -410,7 +497,13 @@ export default function Home() {
       </div>
 
       {/* Daily Quote Card */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 dark:from-emerald-800 dark:via-emerald-900 dark:to-teal-950 rounded-2xl p-4 mb-4 shadow-lg shadow-emerald-900/10 dark:shadow-emerald-900/30">
+      <div className={`relative overflow-hidden rounded-2xl p-4 mb-4 shadow-lg ${
+        phase === 'laylat-qadr'
+          ? 'bg-gradient-to-br from-purple-700 via-indigo-800 to-violet-900 dark:from-purple-900 dark:via-indigo-950 dark:to-violet-950 shadow-purple-900/20 dark:shadow-purple-900/40'
+          : phase === 'last-ten'
+            ? 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 dark:from-indigo-800 dark:via-indigo-900 dark:to-blue-950 shadow-indigo-900/10 dark:shadow-indigo-900/30'
+            : 'bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 dark:from-emerald-800 dark:via-emerald-900 dark:to-teal-950 shadow-emerald-900/10 dark:shadow-emerald-900/30'
+      }`}>
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -458,17 +551,23 @@ export default function Home() {
           size={82}
           strokeWidth={4}
           color={
-            progress >= 70
-              ? "#059669"
-              : progress >= 40
-                ? "#D97706"
-                : "#9CA3AF"
+            phase === 'laylat-qadr'
+              ? (progress >= 70 ? "#7C3AED" : progress >= 40 ? "#D4AF37" : "#9CA3AF")
+              : phase === 'last-ten'
+                ? (progress >= 70 ? "#4338CA" : progress >= 40 ? "#D97706" : "#9CA3AF")
+                : (progress >= 70 ? "#059669" : progress >= 40 ? "#D97706" : "#9CA3AF")
           }
           bgColor="var(--color-border, #E5E7EB)"
         />
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2">
-            <motivation.icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <motivation.icon className={`w-4 h-4 shrink-0 ${
+              phase === 'laylat-qadr'
+                ? 'text-purple-600 dark:text-amber-400'
+                : phase === 'last-ten'
+                  ? 'text-indigo-600 dark:text-indigo-400'
+                  : 'text-emerald-600 dark:text-emerald-400'
+            }`} />
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               {motivation.text}
             </p>
@@ -491,52 +590,37 @@ export default function Home() {
       </div>
 
       {/* Quick status pills */}
+      {(() => {
+        const donePill =
+          phase === 'laylat-qadr'
+            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-amber-400'
+            : phase === 'last-ten'
+              ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
+              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
+        const offPill = 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400';
+        return (
       <div className="flex flex-wrap gap-2 justify-center mb-4">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-            fasted
-              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
-        >
-          {fasted
-            ? <FiCheck className="w-3.5 h-3.5" />
-            : <IoRestaurantOutline className="w-3.5 h-3.5" />}
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${fasted ? donePill : offPill}`}>
+          {fasted ? <FiCheck className="w-3.5 h-3.5" /> : <IoRestaurantOutline className="w-3.5 h-3.5" />}
           {locale === "ar" ? "صيام" : "Fasting"}
         </span>
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-            prayerCount === totalPrayers
-              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-              : prayerCount > 0
-                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
-        >
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+          prayerCount === totalPrayers ? donePill : prayerCount > 0 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : offPill
+        }`}>
           <FiSun className="w-3.5 h-3.5" />
           {toLocalizedNum(prayerCount, locale)}/{toLocalizedNum(totalPrayers, locale)}
         </span>
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-            quranDone
-              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
-        >
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${quranDone ? donePill : offPill}`}>
           {quranDone ? <FiCheck className="w-3.5 h-3.5" /> : <FiBookOpen className="w-3.5 h-3.5" />}
           {locale === "ar" ? "قرآن" : "Quran"}
         </span>
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-            (azkarMorning || azkarEvening)
-              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
-        >
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${(azkarMorning || azkarEvening) ? donePill : offPill}`}>
           <FiHeart className="w-3.5 h-3.5" />
           {locale === "ar" ? "أذكار" : "Azkar"}
         </span>
       </div>
+        );
+      })()}
 
       <DaySelector />
       <FastingCard />

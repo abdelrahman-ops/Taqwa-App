@@ -1,12 +1,13 @@
 import React from 'react';
-import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiCalendar, FiMoon } from 'react-icons/fi';
 import { useApp } from '../context/AppContext';
-import { formatDate, getRamadanDay, MAX_TRACKING_DAYS, toLocalizedNum, RAMADAN_DAYS, getHijriDate } from '../types';
+import { formatDate, getRamadanDay, MAX_TRACKING_DAYS, toLocalizedNum, RAMADAN_DAYS, getHijriDate, getRamadanPhase } from '../types';
 
 export default function DaySelector() {
   const { currentDate, setDate, currentDayNumber, t, locale } = useApp();
 
   const today = formatDate(new Date());
+  const phase = getRamadanPhase(currentDayNumber);
 
   function changeDay(delta: number) {
     const date = new Date(currentDate);
@@ -45,14 +46,30 @@ export default function DaySelector() {
         className="flex flex-col items-center gap-0.5 flex-1 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 active:scale-[0.98] transition-transform"
       >
         <div className="flex items-center gap-1.5">
-          <FiCalendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+          {phase === 'laylat-qadr'
+            ? <FiMoon className="w-3.5 h-3.5 text-purple-600 dark:text-amber-400" />
+            : phase === 'last-ten'
+              ? <FiMoon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              : <FiCalendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+          <span className={`text-[11px] font-semibold ${
+            phase === 'laylat-qadr'
+              ? 'text-purple-600 dark:text-amber-400'
+              : phase === 'last-ten'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-emerald-600 dark:text-emerald-400'
+          }`}>
             {locale === 'ar'
               ? `${hijriDate.monthNameAr} ${toLocalizedNum(hijriDate.dayInMonth, locale)}`
               : `${hijriDate.monthNameEn} ${toLocalizedNum(hijriDate.dayInMonth, locale)}`
             }
             {isToday && (
-              <span className="mr-1 ml-1 text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full font-bold">
+              <span className={`mr-1 ml-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                phase === 'laylat-qadr'
+                  ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-amber-300'
+                  : phase === 'last-ten'
+                    ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+                    : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+              }`}>
                 {t.today}
               </span>
             )}
